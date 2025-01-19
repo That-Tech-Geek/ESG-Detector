@@ -6,10 +6,11 @@ from scipy.optimize import minimize
 from datetime import datetime
 from docx import Document
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from io import BytesIO
 
 # Define a default list of ticker symbols
 tickers = [
-"INFY.NS", "M&M.NS", "TECHM.NS", "HDFC.NS", "ADANIPORTS.NS", "MARICO.NS",
+    "INFY.NS", "M&M.NS", "TECHM.NS", "HDFC.NS", "ADANIPORTS.NS", "MARICO.NS",
     "TATACONSUM.NS", "TCS.NS", "LTI.NS", "DRREDDY.NS", "KANSAINER.NS", "ULTRACEMCO.NS",
     "LT.NS", "AMBUJACEM.NS", "ITC.NS", "HINDZINC.NS", "ASIANPAINT.NS", "WIPRO.NS",
     "ICICIGI.NS", "HAVELLS.NS", "NAUKRI.NS", "CIPLA.NS", "GODREJCP.NS", "TATASTEEL.NS",
@@ -23,14 +24,12 @@ tickers = [
 def download_and_clean_data(tickers, period="max", interval="1d"):
     data_dict = {}
     failed_tickers = []
-    success_tickers = []
 
     for ticker in tickers:
         try:
             data = yf.download(ticker, period=period, interval=interval)['Adj Close']
             if data.isna().sum().sum() == 0:  # Ensure no NaNs in data
                 data_dict[ticker] = data
-                success_tickers.append(ticker)
             else:
                 failed_tickers.append(ticker)
         except Exception as e:
@@ -40,7 +39,7 @@ def download_and_clean_data(tickers, period="max", interval="1d"):
     if not data_dict:
         return None, []
 
-    # Check if data is in correct format and has valid entries
+    # Create DataFrame from valid data
     try:
         data = pd.DataFrame(data_dict)
         data = data.dropna()  # Drop rows with any NaN values if present
@@ -103,12 +102,19 @@ def generate_docx_report(date, tickers, weights, sharpe, return_, stddev):
 
     return doc
 
+# Helper function to convert docx to bytes
+def doc_to_bytes(doc):
+    file_stream = BytesIO()
+    doc.save(file_stream)
+    file_stream.seek(0)
+    return file_stream.getvalue()
+
 # Streamlit App
 st.title("Portfolio Optimization App")
 st.sidebar.header("Configuration")
 
 # Ticker Selection
-selected_tickers = st.sidebar.multiselect("Select Tickers", options=tickers, default=tickers[:500])
+selected_tickers = st.sidebar.multiselect("Select Tickers", options=tickers, default=tickers[:min(10, len(tickers))])
 if not selected_tickers:
     st.error("Please select at least one ticker.")
 
@@ -119,43 +125,39 @@ if st.sidebar.button("Optimize Portfolio"):
         if data is None or data.empty:
             st.error("No valid data available for the selected tickers.")
         else:
-            optimal_weights, optimal_sharpe, optimal_return, optimal_stddev = maximize_sharpe_ratio(data)
-            if optimal_weights is None:
-                st.error("Portfolio optimization failed.")
+            # Check if there are at least 2 valid tickers
+            if len(valid_tickers) < 2:
+                st.error("At least 2 valid tickers are required for portfolio optimization.")
             else:
-                # Display results
-                st.success("Portfolio optimization complete!")
-                st.subheader("Optimization Results")
-                st.write(f"**Maximized Sharpe Ratio:** {optimal_sharpe:.4f}")
-                st.write(f"**Annualized Return:** {optimal_return:.4%}")
-                st.write(f"**Annualized Volatility:** {optimal_stddev:.4%}")
+                optimal_weights, optimal_sharpe, optimal_return, optimal_stddev = maximize_sharpe_ratio(data)
+                if optimal_weights is None:
+                    st.error("Portfolio optimization failed.")
+                else:
+                    # Display results
+                    st.success("Portfolio optimization complete!")
+                    st.subheader("Optimization Results")
+                    st.write(f"**Maximized Sharpe Ratio:** {optimal_sharpe:.4f}")
+                    st.write(f"**Annualized Return:** {optimal_return:.4%}")
+                    st.write(f"**Annualized Volatility:** {optimal_stddev:.4%}")
 
-                # Show optimal weights
-                weights_df = pd.DataFrame({
-                    "Ticker": valid_tickers,
-                    "Weight": [f"{w:.4%}" for w in optimal_weights]
-                })
-                st.write("**Optimal Weights:**")
-                st.dataframe(weights_df)
+                    # Show optimal weights
+                    weights_df = pd.DataFrame({
+                        "Ticker": valid_tickers,
+                        "Weight": [f"{w:.4%}" for w in optimal_weights]
+                    })
+                    st.write("**Optimal Weights:**")
+                    st.dataframe(weights_df)
 
-                # Generate and download report
-                date = datetime.now().strftime("%Y-%m-%d")
-                doc = generate_docx_report(date, valid_tickers, optimal_weights, optimal_sharpe, optimal_return, optimal_stddev)
+                    # Generate and download report
+                    date = datetime.now().strftime("%Y-%m-%d")
+                    doc = generate_docx_report(date, valid_tickers, optimal_weights, optimal_sharpe, optimal_return, optimal_stddev)
 
-                # Save the report to memory and provide download link
-                st.download_button(
-                    label="Download Report",
-                    data=doc_to_bytes(doc),
-                    file_name=f"Portfolio_Report_{date}.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
+                    # Save the report to memory and provide download link
+                    st.download_button(
+                        label="Download Report",
+                        data=doc_to_bytes(doc),
+                        file_name=f"Portfolio_Report_{date}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    )
 else:
     st.info("Configure settings and click 'Optimize Portfolio' to begin.")
-
-# Helper function to convert docx to bytes
-def doc_to_bytes(doc):
-    from io import BytesIO
-    file_stream = BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-    return file_stream.getvalue()
