@@ -1,1 +1,7 @@
 streamlit
+yfinance
+numpy
+pandas
+scikit-learn
+python-docx
+datetime
