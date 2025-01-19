@@ -40,7 +40,7 @@ def download_and_clean_data(tickers, period="1y", interval="1d", retries=3):
                     print(f"Error for {ticker} after {retries} attempts: {e}")
 
     if not data_dict:
-        return None, []
+        return None, failed_tickers  # Return failed tickers for user feedback
 
     # Create DataFrame from valid data
     try:
@@ -95,11 +95,14 @@ if not selected_tickers:
 # Download and Clean Data
 if st.sidebar.button("Optimize Portfolio"):
     with st.spinner("Downloading and processing data..."):
-        data, valid_tickers = download_and_clean_data(selected_tickers)
+        data, failed_tickers = download_and_clean_data(selected_tickers)
         if data is None or data.empty:
             st.error("No valid data available for the selected tickers.")
+            if failed_tickers:
+                st.warning(f"Failed to download data for the following tickers: {', '.join(failed_tickers)}")
         else:
             # Check if there are at least 2 valid tickers
+            valid_tickers = list(data.columns)
             if len(valid_tickers) < 2:
                 st.error("At least 2 valid tickers are required for portfolio optimization.")
             else:
