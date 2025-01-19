@@ -88,7 +88,7 @@ st.title("Portfolio Optimization App")
 st.sidebar.header("Configuration")
 
 # Ticker Selection
-selected_tickers = st.sidebar.multiselect("Select Tickers", options=tickers, default=tickers[:10])
+selected_tickers = tickers
 if not selected_tickers:
     st.error("Please select at least one ticker.")
 
