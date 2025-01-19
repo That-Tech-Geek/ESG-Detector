@@ -3,6 +3,7 @@ import yfinance as yf
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+import time
 
 # Define a default list of ticker symbols
 tickers = [
@@ -17,20 +18,26 @@ tickers = [
     "HINDUNILVR.NS", "GRASIM.NS", "VEDL.NS"
 ]
 
-def download_and_clean_data(tickers, period="max", interval="1d"):
+def download_and_clean_data(tickers, period="max", interval="1d", retries=3):
     data_dict = {}
     failed_tickers = []
 
     for ticker in tickers:
-        try:
-            data = yf.download(ticker, period=period, interval=interval)['Adj Close']
-            if data.isna().sum().sum() == 0:  # Ensure no NaNs in data
-                data_dict[ticker] = data
-            else:
-                failed_tickers.append(ticker)
-        except Exception as e:
-            failed_tickers.append(ticker)
-            print(f"Error for {ticker}: {e}")
+        for attempt in range(retries):
+            try:
+                data = yf.download(ticker, period=period, interval=interval)['Adj Close']
+                if data.isna().sum().sum() == 0:  # Ensure no NaNs in data
+                    data_dict[ticker] = data
+                    break  # Exit retry loop on success
+                else:
+                    failed_tickers.append(ticker)
+                    break  # Exit retry loop on NaN data
+            except Exception as e:
+                if attempt < retries - 1:  # If not the last attempt, wait and retry
+                    time.sleep(1)  # Wait before retrying
+                else:
+                    failed_tickers.append(ticker)
+                    print(f"Error for {ticker} after {retries} attempts: {e}")
 
     if not data_dict:
         return None, []
