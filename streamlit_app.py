@@ -20,8 +20,6 @@ tickers = [
     "HINDUNILVR.NS", "GRASIM.NS", "VEDL.NS"
 ]
 
-# Function to download and clean data
-# Function to download and clean data
 def download_and_clean_data(tickers, period="max", interval="1d"):
     data_dict = {}
     failed_tickers = []
@@ -30,24 +28,26 @@ def download_and_clean_data(tickers, period="max", interval="1d"):
     for ticker in tickers:
         try:
             data = yf.download(ticker, period=period, interval=interval)['Adj Close']
-            if data.isna().sum() == 0:  # Ensure there are no NaNs in the data
+            if data.isna().sum().sum() == 0:  # Ensure no NaNs in data
                 data_dict[ticker] = data
                 success_tickers.append(ticker)
             else:
                 failed_tickers.append(ticker)
         except Exception as e:
             failed_tickers.append(ticker)
+            print(f"Error for {ticker}: {e}")
 
     if not data_dict:
         return None, []
 
-    # Combine the downloaded data into a DataFrame
-    data = pd.DataFrame(data_dict)
-    
-    # If there are any missing values, drop them (optional)
-    data = data.dropna()
-    
-    return data, list(data.columns)
+    # Check if data is in correct format and has valid entries
+    try:
+        data = pd.DataFrame(data_dict)
+        data = data.dropna()  # Drop rows with any NaN values if present
+        return data, list(data.columns)
+    except Exception as e:
+        print(f"Error creating DataFrame: {e}")
+        return None, []
 
 # Function to calculate portfolio performance
 def portfolio_performance(weights, returns, cov_matrix):
