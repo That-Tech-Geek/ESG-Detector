@@ -3,7 +3,6 @@ import yfinance as yf
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-from datetime import datetime
 
 # Define a default list of ticker symbols
 tickers = [
@@ -40,7 +39,7 @@ def download_and_clean_data(tickers, period="max", interval="1d"):
     try:
         data = pd.DataFrame(data_dict)
         data = data.dropna()  # Drop rows with any NaN values if present
-        return data, list(data.columns)
+        return data, list(data_dict.keys())
     except Exception as e:
         print(f"Error creating DataFrame: {e}")
         return None, []
@@ -82,7 +81,7 @@ st.title("Portfolio Optimization App")
 st.sidebar.header("Configuration")
 
 # Ticker Selection
-selected_tickers = st.sidebar.multiselect("Select Tickers", options=tickers, default=tickers[:min(10, len(tickers))])
+selected_tickers = st.sidebar.multiselect("Select Tickers", options=tickers, default=tickers[:10])
 if not selected_tickers:
     st.error("Please select at least one ticker.")
 
