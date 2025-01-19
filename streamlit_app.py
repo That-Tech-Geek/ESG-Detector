@@ -7,18 +7,18 @@ import time
 
 # Define a default list of ticker symbols
 tickers = [
-    "INFY.NS", "M&M.NS", "TECHM.NS", "HDFC.NS", "ADANIPORTS.NS", "MARICO.NS",
-    "TATACONSUM.NS", "TCS.NS", "LTI.NS", "DRREDDY.NS", "KANSAINER.NS", "ULTRACEMCO.NS",
+    "INFY.NS", "M&M.NS", "TECHM.NS", "ADANIPORTS.NS", "MARICO.NS",
+    "TATACONSUM.NS", "TCS.NS", "DRREDDY.NS", "KANSAINER.NS", "ULTRACEMCO.NS",
     "LT.NS", "AMBUJACEM.NS", "ITC.NS", "HINDZINC.NS", "ASIANPAINT.NS", "WIPRO.NS",
     "ICICIGI.NS", "HAVELLS.NS", "NAUKRI.NS", "CIPLA.NS", "GODREJCP.NS", "TATASTEEL.NS",
-    "HINDALCO.NS", "MARUTI.NS", "ADANITRANS.NS", "TITAN.NS", "HCLTECH.NS", "PAGEIND.NS",
+    "HINDALCO.NS", "MARUTI.NS", "TITAN.NS", "HCLTECH.NS", "PAGEIND.NS",
     "PIIND.NS", "ACC.NS", "HEROMOTOCO.NS", "DABUR.NS", "TATAMOTORS.NS", "SHREECEM.NS",
     "EICHERMOT.NS", "NESTLEIND.NS", "BIOCON.NS", "DIVISLAB.NS", "JSWSTEEL.NS", "PEL.NS",
     "HDFCBANK.NS", "INDUSINDBK.NS", "ICICIPRULI.NS", "WHIRLPOOL.NS", "AXISBANK.NS",
     "HINDUNILVR.NS", "GRASIM.NS", "VEDL.NS"
 ]
 
-def download_and_clean_data(tickers, period="max", interval="1d", retries=3):
+def download_and_clean_data(tickers, period="1y", interval="1d", retries=3):
     data_dict = {}
     failed_tickers = []
 
