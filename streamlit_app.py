@@ -21,6 +21,7 @@ tickers = [
 ]
 
 # Function to download and clean data
+# Function to download and clean data
 def download_and_clean_data(tickers, period="max", interval="1d"):
     data_dict = {}
     failed_tickers = []
@@ -29,7 +30,7 @@ def download_and_clean_data(tickers, period="max", interval="1d"):
     for ticker in tickers:
         try:
             data = yf.download(ticker, period=period, interval=interval)['Adj Close']
-            if data.isna().sum().sum() == 0:
+            if data.isna().sum() == 0:  # Ensure there are no NaNs in the data
                 data_dict[ticker] = data
                 success_tickers.append(ticker)
             else:
@@ -40,7 +41,12 @@ def download_and_clean_data(tickers, period="max", interval="1d"):
     if not data_dict:
         return None, []
 
+    # Combine the downloaded data into a DataFrame
     data = pd.DataFrame(data_dict)
+    
+    # If there are any missing values, drop them (optional)
+    data = data.dropna()
+    
     return data, list(data.columns)
 
 # Function to calculate portfolio performance
@@ -102,7 +108,7 @@ st.title("Portfolio Optimization App")
 st.sidebar.header("Configuration")
 
 # Ticker Selection
-selected_tickers = st.sidebar.multiselect("Select Tickers", options=tickers, default=tickers[:5])
+selected_tickers = st.sidebar.multiselect("Select Tickers", options=tickers, default=tickers[:500])
 if not selected_tickers:
     st.error("Please select at least one ticker.")
 
