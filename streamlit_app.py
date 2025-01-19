@@ -4,9 +4,6 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 from datetime import datetime
-from docx import Document
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-from io import BytesIO
 
 # Define a default list of ticker symbols
 tickers = [
@@ -80,35 +77,6 @@ def maximize_sharpe_ratio(data):
     optimal_sharpe = -result.fun
     return optimal_weights, optimal_sharpe, optimal_return, optimal_stddev
 
-# Generate report
-def generate_docx_report(date, tickers, weights, sharpe, return_, stddev):
-    doc = Document()
-    doc.add_heading(f"Portfolio Report for {date}", level=1).alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
-    doc.add_heading("Portfolio Summary", level=2)
-    doc.add_paragraph(f"Maximized Sharpe Ratio: {sharpe:.4f}")
-    doc.add_paragraph(f"Annualized Portfolio Return: {return_:.4%}")
-    doc.add_paragraph(f"Annualized Portfolio Volatility: {stddev:.4%}")
-
-    doc.add_heading("Optimal Weights by Ticker", level=2)
-    table = doc.add_table(rows=1, cols=2)
-    table.style = "Table Grid"
-    header_cells = table.rows[0].cells
-    header_cells[0].text = "Ticker"
-    header_cells[1].text = "Weight"
-    for ticker, weight in zip(tickers, weights):
-        row_cells = table.add_row().cells
-        row_cells[0].text = ticker
-        row_cells[1].text = f"{weight:.4%}"
-
-    return doc
-
-# Helper function to convert docx to bytes
-def doc_to_bytes(doc):
-    file_stream = BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-    return file_stream.getvalue()
-
 # Streamlit App
 st.title("Portfolio Optimization App")
 st.sidebar.header("Configuration")
@@ -140,7 +108,7 @@ if st.sidebar.button("Optimize Portfolio"):
                     st.write(f"**Annualized Return:** {optimal_return:.4%}")
                     st.write(f"**Annualized Volatility:** {optimal_stddev:.4%}")
 
-                    # Show optimal weights
+                    # Show optimal weights in a table
                     weights_df = pd.DataFrame({
                         "Ticker": valid_tickers,
                         "Weight": [f"{w:.4%}" for w in optimal_weights]
@@ -148,16 +116,5 @@ if st.sidebar.button("Optimize Portfolio"):
                     st.write("**Optimal Weights:**")
                     st.dataframe(weights_df)
 
-                    # Generate and download report
-                    date = datetime.now().strftime("%Y-%m-%d")
-                    doc = generate_docx_report(date, valid_tickers, optimal_weights, optimal_sharpe, optimal_return, optimal_stddev)
-
-                    # Save the report to memory and provide download link
-                    st.download_button(
-                        label="Download Report",
-                        data=doc_to_bytes(doc),
-                        file_name=f"Portfolio_Report_{date}.docx",
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    )
 else:
     st.info("Configure settings and click 'Optimize Portfolio' to begin.")
