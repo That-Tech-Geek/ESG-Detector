@@ -7,6 +7,19 @@ from datetime import datetime
 from docx import Document
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
+# Define a default list of ticker symbols
+tickers = [
+"INFY.NS", "M&M.NS", "TECHM.NS", "HDFC.NS", "ADANIPORTS.NS", "MARICO.NS",
+    "TATACONSUM.NS", "TCS.NS", "LTI.NS", "DRREDDY.NS", "KANSAINER.NS", "ULTRACEMCO.NS",
+    "LT.NS", "AMBUJACEM.NS", "ITC.NS", "HINDZINC.NS", "ASIANPAINT.NS", "WIPRO.NS",
+    "ICICIGI.NS", "HAVELLS.NS", "NAUKRI.NS", "CIPLA.NS", "GODREJCP.NS", "TATASTEEL.NS",
+    "HINDALCO.NS", "MARUTI.NS", "ADANITRANS.NS", "TITAN.NS", "HCLTECH.NS", "PAGEIND.NS",
+    "PIIND.NS", "ACC.NS", "HEROMOTOCO.NS", "DABUR.NS", "TATAMOTORS.NS", "SHREECEM.NS",
+    "EICHERMOT.NS", "NESTLEIND.NS", "BIOCON.NS", "DIVISLAB.NS", "JSWSTEEL.NS", "PEL.NS",
+    "HDFCBANK.NS", "INDUSINDBK.NS", "ICICIPRULI.NS", "WHIRLPOOL.NS", "AXISBANK.NS",
+    "HINDUNILVR.NS", "GRASIM.NS", "VEDL.NS"
+]
+
 # Function to download and clean data
 def download_and_clean_data(tickers, period="max", interval="1d"):
     data_dict = {}
